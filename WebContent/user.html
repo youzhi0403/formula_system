@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery.cookie.js"></script>
+<script type="text/javascript" src="js/jquery.md5.js"></script>
+<script type="text/javascript" src="cwjJS/userJS.js"></script>
+
+<link rel="stylesheet" href="pagination/css/jquery.pagination.css" />
+<script type="text/javascript" src="pagination/js/jquery.padination.js"></script>
+
+<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+<script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="cwjJS/userAddJS.js"></script>
+<link rel="stylesheet" type="text/css" href="css/main.css" />
+</head>
+
+<body onload="setAuthorityAndName()">
+	<!--第一部分 -->
+	<div class="header">
+		<img src="image/logo.png" alt="配方系统" class="logo" /> <a
+			onclick="exit()"><img src="image/out.png" alt="退出" class="out" /></a>
+		<span class="name">欢迎<b id="userName"></b>登录
+		</span><img src="image/namemian.png" alt="用户"
+			style="float: right; margin-top: 10px;" />
+		<div>
+			<ul class="nav">
+				<li class="menu" onclick="welcomeLink()"><a class="tag"
+					href="#">首 页</a></li>
+				<li class="menu" id="productPage" onclick="productLink()"><a
+					class="tag" href="#">产 品</a></li>
+				<li class="menu" id="formulaPage" onclick="formulaLink()"><a
+					class="tag" href="#">配 方</a></li>
+				<li class="menu" id="materialPage" onclick="materialLink()"><a
+					class="tag" href="#">原 料</a></li>
+				<li class="menu" id="supplierPage" onclick="supplierLink()"><a
+					class="tag" href="#">供应商</a></li>
+				<!-- <li class="menu"><a class="tag" href="#">订单</a></li> -->
+				<li class="menu1" id="systemPage" onclick="systemLink()"><a
+					class="tag1" href="#">系统管理</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="gap"></div>
+	<!--第二部分 -->
+	<div class="left">
+		<ul>
+			<li class="sideBar" onclick="userLink()" id="userPage"><span><a
+					class="sideBar-name" href="#">用户管理</a></span></li>
+			<li class="sideBar" onclick="roleLink()" id="rolePage"><span><a
+					class="sideBar-name1" href="#">角色管理</a></span></li>
+			<li class="sideBar" onclick="productManageLink()"
+				id="productManagePage"><span><a class="sideBar-name1"
+					href="#">产品分类管理</a></span></li>
+		</ul>
+	</div>
+	<!--2-2-->
+	<div class="content">
+		<div class="content-heander">用户管理</div>
+		<div class="search">
+			<span>用户名：</span><input class="txt" type="text" id="uName" /> <span>账户：</span><input
+				class="txt" type="text" id="account" />
+			<div class="search1" id="buttonDiv">
+				<input type="button" value="查找" class="push-button"
+					onclick="searchByCondition()" />
+			</div>
+		</div>
+		<table id="tableId" class="lb" width="100%" height="51" border="1"
+			align="left" cellpadding="0" cellspacing="0">
+			<br />
+			<thead id="theadId">
+
+			</thead>
+			<tbody id="tbodyId">
+			</tbody>
+		</table>
+
+
+		<div class="pagination">
+			<div id="pagination" style="float: right"></div>
+			<div style="float: left; display: none">
+				<p>
+					当前页数：<span id="page1"></span>
+				</p>
+			</div>
+		</div>
+	</div>
+
+
+	<!--第三部分 -->
+	<div class="footer">配方工厂</div>
+
+	<!-- 模态框（Modal） -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog"
+		aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"
+						aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="myModalLabel">用户增加/修改</h4>
+				</div>
+				<div class="modal-body">
+					<div id="fid">
+						<form id="formid">
+							<table height="63" cellpadding="1" cellspacing="0"
+								style="width: 300px; margin: 0 auto">
+								<tr style="display: none">
+									<td><span class="title">序号 : </span><input
+										id="userIdOfModelBox" type="text" disabled="disabled" /></td>
+								</tr>
+								<tr>
+									<td><span class="title">账户 : </span><input
+										id="accountOfModelBox" type="text" /></td>
+								</tr>
+								<tr>
+									<td><span class="title">密码 : </span><input
+										id="pwdOfModelBox" type="password" /></td>
+								</tr>
+								<tr>
+									<td><span class="title">昵称 : </span><input
+										id="userNameOfModelBox" type="text" /></td>
+								</tr>
+								<tr>
+									<td><span class="title">用户角色 : </span><select
+										id="theSelectIdOfModelBox"></select></td>
+								</tr>
+							</table>
+
+						</form>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭
+					</button>
+					<button type="button" class="btn btn-primary" onclick="save()">
+						提交更改</button>
+				</div>
+			</div>
+			<!-- /.modal-content -->
+		</div>
+		<!-- /.modal -->
+	</div>
+
+</body>
+</html>

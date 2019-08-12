@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/main.css" />
+<script type="text/javascript" src="js/jquery-1.8.3.js"></script>
+<script type="text/javascript" src="js/jquery.cookie.js"></script>
+<script type="text/javascript" src="cwjJS/welcomeJS.js"></script>
+
+</head>
+
+<body onload="setAuthorityAndName()">
+<div class="header">
+    <img src="image/logo.png" alt="配方系统" class="logo"/>
+    <img src="image/out.png" alt="退出" class="out" onclick="exit()"/>
+    <span class="name">欢迎<b id="userName"></b>登录</span><img src="image/namemian.png" alt="用户" style="float:right;margin-top:10px;"/>
+    <div>
+    		<ul class="nav">
+            	<li class="menu1" onclick = "welcomeLink()"><a class="tag1" href="#">首 页</a></li>
+				<li class="menu" id="productPage" onclick="productLink()"><a class="tag" href="#">产 品</a></li>
+				<li class="menu" id="formulaPage" onclick="formulaLink()"><a class="tag" href="#">配 方</a></li>
+				<li class="menu" id="materialPage" onclick="materialLink()"><a class="tag" href="#">原 料</a></li>
+				<li class="menu" id="supplierPage" onclick="supplierLink()"><a class="tag" href="#">供应商</a></li>
+				<!-- <li class="menu"><a class="tag" href="#">订单</a></li> -->
+                <li class="menu" id="systemPage" onclick="systemLink()" ><a class="tag" href="#">系统管理</a></li>
+			</ul>
+     </div>
+    
+</div>
+ <div class="gap"></div>
+ <div>
+ 	<img src="image/welcome.gif" alt="背景图片"  class="welcome" style="width:100%;height:100%;"/>
+     <div class="affiche">
+		<h2 class="affiche1">公告</h2>
+        <h2>欢迎来到</h2>
+        <h2>配方管理系统</h2>
+　　</div>
+ </div>
+
+
+<!--第三部分 -->
+	<div class="footer">配方工厂</div>
+</body>
+</html>

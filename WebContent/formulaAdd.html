@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="css/mainz.css" />
+<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="cwjJS/formulaAddJS.js"></script>
+</head>
+<body onload="loadData()">
+	<div style="text-align:center;font-size:30px"><span id="formulaAddSpan"></span>配方</div>
+	<div id="fid">
+		<form id="formid">
+			<table width="341" height="268" cellpadding="1" cellspacing="0"
+				style="width: 400px; margin: 0 auto">
+				<tr style="display:none">
+					<td><span class="title">序号：</span><input id="form_id"
+						type="text" disabled="disabled"></td>
+				</tr>
+				<tr>
+					<td><span class="title">名称 : </span><input id="form_name"
+						type="text" /></td>
+				</tr>
+				<tr>
+					<td><span class="title">编号 : </span><input id="form_number"
+						type="text" /></td>
+				</tr>
+				<tr>
+					<td><span class="title1">原料列表: </span>
+						<div id="totalDiv">
+						</div> 
+						<input type="button" value="增加" onclick="addDiv()" />
+					</td>
+					
+				</tr>
+				<tr>
+					<td><span class="title">配方份量 : </span><input
+						id="form_formulaAmount" type="text" /></td>
+				</tr>
+				<tr>
+					<td><span class="title">工艺 : </span><input
+						id="form_technology" type="text" /></td>
+				</tr>
+				<tr>
+					<td><span class="title">温度 : </span><input
+						id="form_temperature" type="text" /></td>
+				</tr>
+			</table>
+			<div style="text-align: center">
+				<input type="button" value="保存" onclick="save()"/> 
+				<input type="reset" value="重置" onclick="resetForm()"/>
+				<input type="button" value="添加原料" onclick="openMaterialAddDialog()"/>
+				<br/>
+				<span>价格:</span><input type="text" id="priceText" />
+			</div>
+		</form>
+	</div>
+
+</body>
+</html>

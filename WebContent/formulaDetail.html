@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link data-jsfiddle="common" rel="stylesheet" media="screen"
+	href="handsontableFile/dist/handsontable.css">
+<link data-jsfiddle="common" rel="stylesheet" media="screen"
+	href="handsontableFile/dist/pikaday/pikaday.css">
+<script data-jsfiddle="common"
+	src="handsontableFile/dist/pikaday/pikaday.js"></script>
+<script data-jsfiddle="common"
+	src="handsontableFile/dist/moment/moment.js"></script>
+<script data-jsfiddle="common"
+	src="handsontableFile/dist/numbro/numbro.js"></script>
+<script data-jsfiddle="common"
+	src="handsontableFile/dist/numbro/languages.js"></script>
+<script data-jsfiddle="common"
+	src="handsontableFile/dist/handsontable.js"></script>
+
+
+<link data-jsfiddle="common" rel="stylesheet" media="screen"
+	href="handsontableFile/css/samples.css">
+<!-- <script src="handsontableFile/js/samples.js"></script> -->
+<script src="handsontableFile/js/highlight/highlight.pack.js"></script>
+<link rel="stylesheet" media="screen"
+	href="handsontableFile/js/highlight/styles/github.css">
+<link rel="stylesheet"
+	href="handsontableFile/css/font-awesome/css/font-awesome.min.css">
+
+<script type="text/javascript" src="js/jquery.js"></script>
+</head>
+
+<body onload="loadDataOfMaterialName()">
+	<div class="wrapper">
+		<div class="wrapper-row">
+			<div id="container">
+				<div class="columnLayout">
+					<div class="rowLayout">
+						<div class="descLayout">
+							<div class="pad" data-jsfiddle="example1">
+								<div>
+									<div id="example1"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="outside-links-wrapper">
+		<input value="保存" onclick="save()" type="button" />
+		<!-- <input value="计算价格" onclick="computePrice()" type="button"/>
+		<input value="test" onclick="testReadOnly()" type="button"/> -->
+	</div>
+
+</body>
+
+<script>
+//测试数据
+var materialArr = [];
+var idArr = [];
+var nameArr = [];
+
+function loadDataOfMaterialName(){
+	$.post(
+		"/FormulaSystem/api/formula/material-name",
+		function(result){
+			if(result.code==200){
+				materialArr = result.data;
+				//两个数组存储 id 和 名称
+				for(var x=0;x<materialArr.length;x++){
+					idArr.push(materialArr[x].id);
+					nameArr.push(materialArr[x].name);
+				}
+				
+				//加载数据
+				loadDataOfFormula();
+				
+			}else{
+				alert("原料名称信息加载失败");
+			}
+			
+		},
+		"json"
+	);
+}
+
+
+/* var infoOfFormula; */
+function loadDataOfFormula(){
+	var id = window.location.search;
+	//如果是新增按钮跳转的页面，则不执行myFunction函数
+	var updateRowId = id.substring(4);
+	$.ajax({
+		url : "/FormulaSystem/api/formula?action=showdetails",
+		type : "POST",
+		contentType : "application/json",
+		dataType : "json",
+		data : "{'id':"+ updateRowId + "}",
+		async : true,
+		success : function(result) {
+			//先把所有的原料id，原料名称load出来，放在变量里
+			/* var startTime = (new Date()).getTime(); */
+			createExcel(result);
+			/* var endTime = (new Date()).getTime();
+			console.log("method of setPriceInCellAndCompute："+(endTime-startTime)); */
+			//当表格完成之后,set计划量框的价格
+			setPriceInCell(result);
+			
+			/* setPriceInCellAndCompute(result); */
+			 
+			//初始化完之后计算价格
+			
+		}
+	});
+}
+
+var container = document.getElementById('example1'),
+hot;
+var data;
+var mergeCellsCollection;
+
+function createExcel(result){
+	data = initialArray(result);
+	mergeCellsCollection = initialCollection(result);
+
+	//二次合并，在data数组上操作(之前在hot上操作有逻辑错误，因为hot还没有创建完成)
+	mergeCellsCollection = addCollection(result,data,mergeCellsCollection);
+
+	var settings = {
+			
+		data: data,
+		colWidths: [100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100],  
+		rowHeaders: true,
+		colHeaders: true,
+		contextMenu: true,
+		stretchH: 'all',
+		mergeCells: mergeCellsCollection
+
+	};
+	
+	hot = new Handsontable(container, settings);
+	
+	hot.updateSettings({
+	    contextMenu: {
+	    	items: {
+	        	"row_above": {
+		      		name: '此前插一行',
+		      		callback: function callback(key, selection) {
+		      	      this.alter('insert_row', selection.start.row, 1, 'ContextMenu.rowAbove');
+		      	      /* alert("rowNumber:"+selection.start.row); */
+		      	      //做该行的合并,要先判断 是注意事项还是 乳化工艺记录
+		      	      //插入后获取乳化工艺记录的区间 和 注意事项的区间
+		      	      var startIndexOfMaterial = 5;
+		      	      var theIndex = 5;
+		      	      
+			      	  while(hot.getDataAtCell(theIndex,0)!="注意事项:"){
+				      	  theIndex++;
+				      }
+				      var startIndexOfAbnormalRecord = theIndex; //乳化异常记录:
+
+			      	  var endIndexOfMaterial = theIndex-1;
+				      
+				      var startIndexOfAttention = theIndex+1;
+				      while(hot.getDataAtCell(theIndex,0)!="理化指标:"){
+				    	  theIndex++;
+					  }
+					  var endIndexOfAbnormalRecord = theIndex; //理化指标:
+					  
+					  var endIndexOfAttention = theIndex-1;
+					  
+					  //如果是注意事项区间的
+					  if(selection.start.row>=startIndexOfAttention && selection.start.row<=endIndexOfAttention){
+						  mergeCellsCollection.push({row:selection.start.row,col:0,rowspan:1,colspan:9});
+					  }
+
+					  //如果是乳化工艺记录区间的
+					  if(selection.start.row>=startIndexOfMaterial && selection.start.row<=endIndexOfMaterial){
+						  mergeCellsCollection.push({row:selection.start.row,col:9,rowspan:1,colspan:5});
+				      }
+
+					  //合并乳化异常记录：
+				      //先考虑在 此前插入的情况:
+					  //1.如果是在 第一条注意事项那里插入的话,需要 (1)消除 乳化异常记录 1，(2)将值转移到乳化异常记录下的第一行(3)合并单元格
+					  //如果插入行的上一行单元格内容是： 乳化异常记录:
+					  
+					  //先获取乳化异常记录的区间  endIndexOfAbnormalRecord - startIndexOfAbnormalRecord - 1
+					  var Inteval = endIndexOfAbnormalRecord - startIndexOfAbnormalRecord - 1;
+					  //如果行数在 注意事项:到 理化指标:这个区间内，那么就执行以下方法
+					  if(selection.start.row>startIndexOfAbnormalRecord && selection.start.row<endIndexOfAbnormalRecord){
+						  if(hot.getDataAtCell(selection.start.row-1,9)=="乳化异常记录:"){
+							  //设值
+							  var theValue = hot.getDataAtCell(parseInt(selection.start.row)+1,9);
+							  hot.setDataAtCell(selection.start.row,9,theValue,data);
+							  //把值去掉
+							  hot.setDataAtCell(selection.start.row+1,9,"",data);
+							  //合并
+							  mergeCellsCollection.push({row:selection.start.row,col:9,rowspan:Inteval,colspan:5});
+						  }else{
+							  //2.如果是其他情况,只需要合并单元格
+							  mergeCellsCollection.push({row:startIndexOfAbnormalRecord+1,col:9,rowspan:Inteval,colspan:5});
+						  }
+
+					  }
+
+				      hot.updateSettings(
+						  {
+				    	  mergeCells:mergeCellsCollection
+				    	  }
+			    	  );
+			      	  
+		      	      
+		      	    },
+	          		disabled: function () {
+	            		return hot.getSelected()[0] === 0;
+	          		} 
+	        	},
+	        	"row_below": {
+		        	name: '此后插一行',
+		        	callback: function callback(key, selection) {
+		        	    this.alter('insert_row', selection.end.row + 1, 1, 'ContextMenu.rowBelow');
+		        	    /* alert("rowNumber:"+(parseInt(selection.end.row)+1)); */
+		        	    //做该行的合并,要先判断 是注意事项还是 乳化工艺记录
+		        	    //插入后获取乳化工艺记录的区间 和 注意事项的区间
+		        	    var startIndexOfMaterial = 5;
+			      	    var theIndex = 5;
+			      	      
+				      	while(hot.getDataAtCell(theIndex,0)!="注意事项:"){
+					      	theIndex++;
+					    }
+				      	var startIndexOfAbnormalRecord = theIndex; //乳化异常记录:
+
+				      	var endIndexOfMaterial = theIndex-1;
+					      
+					    var startIndexOfAttention = theIndex+1;
+					    while(hot.getDataAtCell(theIndex,0)!="理化指标:"){
+					    	theIndex++;
+						}
+					    var endIndexOfAbnormalRecord = theIndex; //理化指标:
+					    
+						var endIndexOfAttention = theIndex-1;
+						  
+						//如果是注意事项区间的
+						if((parseInt(selection.end.row)+1)>=startIndexOfAttention && (parseInt(selection.end.row)+1)<=endIndexOfAttention){
+							mergeCellsCollection.push({row:(parseInt(selection.end.row)+1),col:0,rowspan:1,colspan:9});
+						}
+
+						//如果是乳化工艺记录区间的
+						if((parseInt(selection.end.row)+1)>=startIndexOfMaterial && (parseInt(selection.end.row)+1)<=endIndexOfMaterial){
+							mergeCellsCollection.push({row:(parseInt(selection.end.row)+1),col:9,rowspan:1,colspan:5});
+					    }
+
+						var Inteval = endIndexOfAbnormalRecord - startIndexOfAbnormalRecord - 1;
+						    //如果行数在 注意事项:到 理化指标:这个区间内，那么就执行以下方法
+						if((parseInt(selection.end.row)+1)>startIndexOfAbnormalRecord && (parseInt(selection.end.row)+1)<endIndexOfAbnormalRecord){
+							if(hot.getDataAtCell(selection.end.row,9)=="乳化异常记录:"){
+								//设值
+								var theValue = hot.getDataAtCell(parseInt(selection.end.row)+2,9);
+								hot.setDataAtCell((parseInt(selection.end.row)+1),9,theValue,data);
+								//把值去掉
+								hot.setDataAtCell((parseInt(selection.end.row)+1)+1,9,"",data);
+								//合并
+								mergeCellsCollection.push({row:(parseInt(selection.end.row)+1),col:9,rowspan:Inteval,colspan:5});
+							}else{
+								//2.如果是其他情况,只需要合并单元格
+								mergeCellsCollection.push({row:startIndexOfAbnormalRecord+1,col:9,rowspan:Inteval,colspan:5});
+							}
+						}
+
+						hot.updateSettings(
+							{
+						    mergeCells:mergeCellsCollection
+						    }
+					    );
+		        	    
+		        	},
+		        },
+	        	"hsep1": "---------",
+	        	"remove_row": {
+	         		name: '移除当前行',
+	          		disabled: function () {
+	            		return hot.getSelected()[0] === 0
+	          		}
+	        	},
+				//
+	        	"mergeCells": {
+		        	name: function name() {
+		        		var sel = this.getSelected();
+		        	    var info = this.mergeCells.mergedCellInfoCollection.getInfo(sel[0], sel[1]);
+		        	    if (info) {
+		        	    	return '解除单元格合并';
+		        	    }
+		        	    return '合并单元格';
+		        	}
+		        }
+	      	}
+	    },
+	    
+		afterChange: function(changes,source){ 
+			//changes 
+			
+			//changes和source参数不用
+			//afterChange是需要在表格create之后再定义 
+			/* computePrice();  */
+			
+			//先获取计算价格行的instance
+			//再进行判断
+			var instanceOfPrice = 0;
+			while(hot.getDataAtCell(instanceOfPrice,0)!="计划量总量:"){
+				instanceOfPrice++;
+			}
+
+			//获取原料区间的上 下限
+			var startIndex = 6;
+			var endIndex = instanceOfPrice-1;
+			
+			//当指定的区间(原料区间)变化的时候，执行代码
+			//获取指定的区间
+			
+		
+			if(changes[0][0]>=startIndex && changes[0][0]<=endIndex && changes[0][1]==1){
+				//获取单元格的原料，查找到id
+				var mIndex = getMaterialIndex(hot.getDataAtCell(changes[0][0],changes[0][1]));
+				$.post(
+					"/FormulaSystem/api/material?action=showlist&id="+idArr[mIndex],
+					function(result){
+						var startTime = (new Date()).getTime();
+						hot.setDataAtCell(changes[0][0],2,result.data.list[0].name,data);//商品名   load一条原料数据的时候，name是商品名
+						hot.setDataAtCell(changes[0][0],3,result.data.list[0].inci_cn,data);//inci
+						//将价格设置为计划量的属性
+						
+						hot.setCellMeta(changes[0][0],4,"price",result.data.list[0].price);
+						/* alert("price:"+hot.getCellMeta(changes[0][0],4).price); */
+						hot.setDataAtCell(changes[0][0],4,0.0,data);//计划量
+						hot.setDataAtCell(changes[0][0],5,0.0,data);//实称量
+						hot.setDataAtCell(changes[0][0],6,"",data);//批料号
+						hot.setDataAtCell(changes[0][0],7,0.0,data);//乳化核称重量
+						hot.setDataAtCell(changes[0][0],8,0.0,data);//计算成本
+						var endTime = (new Date()).getTime();
+						console.log(endTime-startTime);
+						
+					},
+					"json"
+				);
+			} 
+			
+			if(changes[0][0]>=startIndex && changes[0][0]<=endIndex && changes[0][1]==4){
+				//计算成本
+				
+				hot.setDataAtCell(changes[0][0],8,computePriceOfMaterial(changes[0][0]),data);
+				
+			}
+			
+			//如果是如果是计划量 单元格变化
+			if(changes[0][0]>=startIndex && changes[0][0]<=endIndex && changes[0][1]==4){
+				computePlanAmount();
+			}  
+
+			
+		},
+		//遍历每一个cells
+		cells: function(row,col,prop){
+			//先给前五行设只读
+			var cellProperties = {};
+
+			if(row==0 && prop==0){
+				cellProperties.className = "htCenter";
+			}
+			
+			if((row==1 && prop==1) ||
+					(row==1 && prop==10) ||
+					(row==2 && prop==0) ||
+					(row==2 && prop==6) ||
+					(row==2 && prop==8) ||
+					(row==2 && prop==11) ||
+					(row==2 && prop==10) ||
+					(row==2 && prop==13) ||
+					(row==3 && prop==0) ||
+					(row==3 && prop==5) ||
+					(row==3 && prop==7) ||
+					(row==3 && prop==11) ||
+					(row==4 && prop==0) ||
+					(row==4 && prop==9) ||
+					(row==5 && prop==0) ||
+					(row==5 && prop==1) ||
+					(row==5 && prop==2) ||
+					(row==5 && prop==3) ||
+					(row==5 && prop==4) ||
+					(row==5 && prop==5) ||
+					(row==5 && prop==6) ||
+					(row==5 && prop==7) ||
+					(row==5 && prop==8) ||
+					(row==5 && prop==9)){
+				cellProperties.readOnly = true;
+			}
+			
+			//顺着往下跑
+			var theIndex = 5;
+			while(hot.getDataAtCell(theIndex,0)!="计划量总量:"){
+				theIndex++;
+			}
+			//获得原料区间：下标6 到 计算价格上一行
+			var startIndex = 5;
+			var endIndex = theIndex-1;
+			if((row<=endIndex && row>=startIndex) && prop==1){
+				cellProperties.type = "autocomplete";
+				cellProperties.source = nameArr;
+			}
+			//给所有的 中文名 inci 价格 设为只读
+			if((row<=endIndex && row>=startIndex) && (prop==2 || prop==3 || prop==8)){
+				cellProperties.readOnly = true;
+			}
+			
+			//将 计算价格:单元格 设为只读
+			if(row==theIndex && prop==0){
+				cellProperties.readOnly = true;
+			}
+			
+			while(hot.getDataAtCell(theIndex,0)!="注意事项:"){
+				theIndex++;
+			}
+			
+			//将计算价格和乳化异常记录设为只读
+			if((row==theIndex && prop==0) || (row==theIndex && prop==9)){
+				cellProperties.readOnly = true;
+			}
+
+			//将理化指标设为只读
+			while(hot.getDataAtCell(theIndex,0)!="理化指标:"){
+				theIndex++;
+			}
+			//将理化指标 设为只读
+			if(row==theIndex && prop==0){
+				cellProperties.readOnly = true;
+			}
+			//将最后一行需要的 设为只读
+			theIndex++;
+			if((row==theIndex && prop==1) || 
+					(row==theIndex && prop==3) ||
+					(row==theIndex && prop==5) ||
+					(row==theIndex && prop==7) ||
+					(row==theIndex && prop==9)){
+				cellProperties.readOnly = true;
+			}
+
+			return cellProperties;		
+			
+		} 
+
+	});
+
+	computePlanAmount();
+	
+}
+
+function setPriceInCell(result){
+	//先获取原料的区间
+	//再顺着把值设置进去
+	var startIndex =6;
+	var endIndex = startIndex + result.data.fmlist.length;
+	var index = 0;
+	
+	for(var x=startIndex;x<endIndex;x++){
+		hot.setCellMeta(x,4,"price",result.data.fmlist[index].price);
+		index++;
+	}	
+}
+
+//获取指定原料的index
+function getMaterialIndex(str){
+	var isFlag = false;
+	for(var x=0;x<nameArr.length;x++){
+		if(nameArr[x]==str){
+			isFlag = true;
+			return x;
+		}
+	}
+	if(!isFlag){
+		alert("找不到指定原料的下标");
+	}
+}
+
+
+function initialArray(result){
+	var arr = [];
+	//表头的值为固定，先创建表头(前6行)
+	var arr1 = [result.data.f_name,"","","","","","","","","","","","",""];
+	arr.push(arr1);
+	var arr2 = ["","产品代码:",result.data.p_code,"","","","","","","","配方编号:",result.data.f_number,"",""];
+	arr.push(arr2);
+	var arr3 = ["产品名称:",result.data.p_name,"","","","","批号:",result.data.batch_number,"计划量:",result.data.plain_amount,"kg","实产量:",result.data.actual_output,"kg"];
+	arr.push(arr3);
+	var arr4 = ["水质ph:",result.data.water_ph,"","","","水质导电率:",result.data.ele_conductivity,"设备状态:",result.data.equipment_state,"","","生产日期:",result.data.product_date,""];
+	arr.push(arr4);
+	
+	var arr5 = ["乳化开始时间:",result.data.emulStartTime,"","","","","","","","乳化结束时间:",result.data.emulEndTime,"","",""];
+	arr.push(arr5);
+	
+	var arr6 = ["组别","原料代码","原料商品名","中文INCI","计划量(单位为千克)","实称量","批料号","乳化核称重量","计算成本","乳化工艺记录","","","",""];
+	arr.push(arr6);
+
+	//插入中间可变内容
+	//判断哪个list.size更大
+	var materialLength = result.data.fmlist.length;
+	var procLenght = result.data.procList.length;
+	//原料的下一行为公式
+	if((materialLength+1)>procLenght){
+		//原料列表较长的问题
+		//先插入原料
+		var planAmount = 0;
+		for(var x=0;x<materialLength;x++){
+			//先手动插入价格
+			var arrDemo = [result.data.fmlist[x].group,
+			   				result.data.fmlist[x].code,
+			   				result.data.fmlist[x].name,
+			   				result.data.fmlist[x].inci_cn,        //新插入inci
+			   				result.data.fmlist[x].plan_amount,
+			   				result.data.fmlist[x].actual_amount,
+			   				result.data.fmlist[x].m_batch_num,
+			   				result.data.fmlist[x].checked_weight,
+			   				result.data.fmlist[x].plan_amount * result.data.fmlist[x].price,"","","","",""];
+			arr.push(arrDemo);
+
+			//获取所有原料的计划量总和
+			planAmount += parseFloat(result.data.fmlist[x].plan_amount);
+		}
+		//插入求和公式行
+		var arrDemo = ["计划量总量:",planAmount,"","","","","","","","","","","",""];
+		arr.push(arrDemo);
+		//再插入乳化工艺记录，从第六行开始赋值
+		var index = 0;
+		for(var x=6;x<procLenght+6;x++){
+			arr[x][9] = result.data.procList[index++];
+		}
+	}else{
+		//乳化工艺表较长的情况
+		//先插入乳化工艺记录
+		for(var x=0;x<procLenght;x++){
+			var arrDemo = ["","","","","","","","","",result.data.procList[x],"","","",""];
+			arr.push(arrDemo);
+		}
+		//再插入原料
+		var index = 0;
+		var planAmount = 0;
+		for(var x=6;x<materialLength+6;x++){
+			arr[x][0] = result.data.fmlist[index].group;
+			arr[x][1] = result.data.fmlist[index].code;
+			arr[x][2] = result.data.fmlist[index].name;
+			arr[x][3] = result.data.fmlist[index].inci_cn,    
+			arr[x][4] = result.data.fmlist[index].plan_amount;
+			arr[x][5] = result.data.fmlist[index].actual_amount;
+			arr[x][6] = result.data.fmlist[index].m_batch_num;
+			arr[x][7] = result.data.fmlist[index].checked_weight;
+			//先手动插入价格
+			arr[x][8] = result.data.fmlist[index].plan_amount * result.data.fmlist[index].price;
+
+			//获取所有原料的计划量总和
+			planAmount += parseFloat(result.data.fmlist[index].plan_amount);
+			
+			index++;
+		}
+		//插入求和公式行
+		arr[materialLength+6][0] = "计划量总量:";
+		arr[materialLength+6][1] = planAmount;
+		
+	}
+
+	//插入注意事项
+	var arrDemo = ["注意事项:","","","","","","","","","乳化异常记录:","","","",""];
+	arr.push(arrDemo);
+	for(var x=0;x<result.data.attentionList.length;x++){
+		if(x==0){
+			var arrDemo = [result.data.attentionList[x],"","","","","","","","",result.data.exception_record,"","","",""];
+			arr.push(arrDemo);
+		}else{
+			var arrDemo = [result.data.attentionList[x],"","","","","","","","","","","","",""];
+			arr.push(arrDemo);
+		}
+	}
+	//插入理化指标
+	var arrDemo = ["理化指标:",result.data.physicochemical_target,"","","","","","","","","","","",""];
+	arr.push(arrDemo);
+	//插入表尾
+	var arrDemo = ["","工程师:",result.data.engineer,"称料:",result.data.material_weigher,"核称:",result.data.material_checker,"配料员:",result.data.material_distributor,"乳化主管:",result.data.supervisor,"","",""];
+	arr.push(arrDemo);
+	return arr;
+}
+
+//存储原料的类别
+var groupArr = [];
+
+function initialCollection(result){
+	//乳化工艺的长度和原料的长度
+	var materialLength = result.data.fmlist.length;
+	var procLenght = result.data.procList.length;
+	
+	var index;
+	for(var j=0;j<materialLength;j++){
+		if((index=isContain(result.data.fmlist[j].group))!=-1){
+			groupArr[index].groupVal++;
+		}
+		else{
+			var obj = {
+					"groupName":result.data.fmlist[j].group,
+					"groupVal":1
+			};
+			groupArr.push(obj);
+		}
+	}
+
+	var collection = [];
+	//表头的合并是固定(前5行)
+	collection.push({row:0,col:0,rowspan:1,colspan:14});
+	collection.push({row:1,col:2,rowspan:1,colspan:3});
+	collection.push({row:1,col:11,rowspan:1,colspan:3});
+	collection.push({row:2,col:1,rowspan:1,colspan:5});
+	collection.push({row:3,col:1,rowspan:1,colspan:4});
+	collection.push({row:3,col:8,rowspan:1,colspan:3});	
+	collection.push({row:3,col:12,rowspan:1,colspan:2});
+	collection.push({row:5,col:9,rowspan:1,colspan:5});
+
+	//乳化工艺记录水平合并
+	if(materialLength+1>procLenght){
+		for(var x=6;x<materialLength+1+6;x++){
+			collection.push({row:x,col:9,rowspan:1,colspan:5});
+		}
+	}else{
+		for(var x=6;x<procLenght+6;x++){
+			collection.push({row:x,col:9,rowspan:1,colspan:5});
+		}
+	}
+	
+	
+	//test(两个合并有重叠是不会冲突的)
+	/* collection.push({row:5,col:8,rowspan:2,colspan:5}); */
+	
+	//原料组别的合并
+	var theInstance = 6;    //初始垂直距离
+	for(var x=0;x<groupArr.length;x++){
+		collection.push({row:theInstance,col:0,rowspan:groupArr[x].groupVal,colspan:1});
+		theInstance = theInstance + groupArr[x].groupVal;
+	}
+
+	//合并计划量总量
+	collection.push({row:theInstance,col:1,rowspan:1,colspan:8});
+
+	//合并注意事项 和 乳化异常记录
+	theInstance = 0;  //重置
+	if((materialLength+1)>procLenght){
+		theInstance = 6 + materialLength + 1;
+	}else{
+		theInstance = 6 + procLenght;
+	}
+	collection.push({row:theInstance,col:0,rowspan:1,colspan:9});
+	collection.push({row:theInstance,col:9,rowspan:1,colspan:5});
+	//合并具体注意事项 和 具体乳化异常记录
+	theInstance++;
+	var listSize = result.data.attentionList.length;
+	for(var x=0;x<result.data.attentionList.length;x++){		
+		if(x==0){
+			collection.push({row:theInstance,col:0,rowspan:1,colspan:9});
+			collection.push({row:theInstance,col:9,rowspan:listSize,colspan:5});
+			theInstance++;
+		}else{
+			collection.push({row:theInstance,col:0,rowspan:1,colspan:9});
+			theInstance++;
+		}
+	}
+
+	//合并理化指标
+	collection.push({row:theInstance++,col:1,rowspan:1,colspan:8});
+	//合并表尾(表尾不合并了)
+/* 	collection.push({row:theInstance,col:0,rowspan:1,colspan:13}); */
+	return collection;
+	
+}
+
+function isContain(gName){
+	for(var j=0;j<groupArr.length;j++){
+		if(groupArr[j].groupName==gName){
+			return j;
+		}
+	}
+	return -1;
+}
+
+ function save(){
+	var jsonData = {};
+	//先拿到前4行的数据
+	var f_name = hot.getDataAtCell(0,0);  //配方名字
+	jsonData.f_name = f_name;
+	
+	var p_code = hot.getDataAtCell(1,2);  //产品代码
+	jsonData.p_code = p_code;
+
+	var f_number = hot.getDataAtCell(1,11);  //配方编号
+	jsonData.f_number = f_number;
+		
+	var p_name = hot.getDataAtCell(2,1);     //产品名称
+	jsonData.p_name = p_name;
+
+	var batch_number = hot.getDataAtCell(2,7);   //批号
+	jsonData.batch_number = batch_number;
+	
+	var plain_amount = hot.getDataAtCell(2,9);   //计划量
+	jsonData.plain_amount = plain_amount;
+
+	var actual_output = hot.getDataAtCell(2,12);  //实产量
+	jsonData.actual_output = actual_output;
+	
+	var water_ph = hot.getDataAtCell(3,1);    //水质ph
+	jsonData.water_ph = water_ph;
+
+	var ele_conductivity = hot.getDataAtCell(3,6);   //水质导电率
+	jsonData.ele_conductivity = ele_conductivity;
+
+	var equipment_state = hot.getDataAtCell(3,8);    //设备状态
+	jsonData.equipment_state = equipment_state;
+
+	var product_date = hot.getDataAtCell(3,12);      //生产日期
+	jsonData.product_date = product_date;
+
+	var emulStartTime = hot.getDataAtCell(4,1);
+	jsonData.emulStartTime = emulStartTime;
+
+	var emulEndTime = hot.getDataAtCell(4,10);
+	jsonData.emulEndTime = emulEndTime;
+	
+
+	//添加plain_unit
+	jsonData.plain_unit = hot.getDataAtCell(2,10);  //单位
+
+	//添加fid
+	jsonData.id = window.location.search.substring(4); //原料id
+	
+	//先拿原料,从第五行开始拿
+	var fmlist = [];
+	var theIntance = 6;
+	var categoryTemp = hot.getDataAtCell(6,0); //存储类别的变量
+	//第三个单元格开始判断，第二个单元格要放价格
+	while(hot.getDataAtCell(theIntance,2)!==""){
+		//拿组别的算法要改
+		//先给所有的原料设置对应的组别,再拿相对应的数据
+		
+		var firstCell = hot.getDataAtCell(theIntance,0);   //组别
+
+		//有一个undefined的错误
+		if(firstCell==="" || firstCell===categoryTemp || firstCell==undefined){
+			firstCell = categoryTemp;
+		}else{
+			categoryTemp = firstCell;
+		}
+
+		var secondCell = hot.getDataAtCell(theIntance,1);  //原料名称
+		var thirdCell = hot.getDataAtCell(theIntance,2);   //中文名
+		var fourthCell = hot.getDataAtCell(theIntance,3);  //INCI
+		var fifthCell = hot.getDataAtCell(theIntance,4);   //计划量
+		var sixthCell = hot.getDataAtCell(theIntance,5);   //实称量
+		var seventhCell = hot.getDataAtCell(theIntance,6);   //批料号
+		var eighthCell = hot.getDataAtCell(theIntance,7);   //乳化核称重量
+		var ninthCell = hot.getDataAtCell(theIntance,8);    //计算成本
+		
+		var objDemo = {};
+		objDemo.group = firstCell==undefined?"":firstCell;
+		objDemo.code = secondCell==undefined?"":secondCell;
+		objDemo.name = thirdCell==undefined?"":thirdCell;
+		objDemo.inci = fourthCell==undefined?"":fourthCell;
+		objDemo.plan_amount = fifthCell==undefined?0:fifthCell;
+		objDemo.actual_amount = sixthCell==undefined?0:sixthCell;
+		objDemo.m_batch_num = seventhCell==undefined?"":seventhCell;
+		objDemo.checked_weight = eighthCell==undefined?0:eighthCell;
+		fmlist.push(objDemo);
+		theIntance++;
+	}
+	jsonData.fmlist = fmlist;
+
+	
+
+	//拿到乳化工艺记录
+	theIntance = 6;
+	
+	var procList = [];
+	while(!isLastOne(theIntance)){
+		var cellDemo = hot.getDataAtCell(theIntance,9);
+		//插入新的一行,新的一行为null值
+		if(cellDemo==null){
+			cellDemo = "";
+		}
+		procList.push(cellDemo);
+		theIntance++;
+	}
+	
+	//加入最后一条乳化工艺记录
+	var cellDemo = hot.getDataAtCell(theIntance,9);
+	//插入新的一行,新的一行为null值
+	if(cellDemo==null){
+		cellDemo = "";
+	}
+	procList.push(cellDemo);
+	
+	jsonData.procList = procList;
+
+	//封装注意事项
+	if(fmlist.length+1>procList.length){
+		var instanceOfPrice =  fmlist.length + 6;
+		theIntance = fmlist.length + 1 + 6 + 1;	
+	}else{
+		var instanceOfPrice =  procList.length + 5;
+		theIntance = procList.length + 6 + 1;
+	}
+	/* //把配方的价格封装进去
+	jsonData.price = hot.getDataAtCell(instanceOfPrice,1); */
+	
+	
+	var attentionList = [];
+
+	//拿乳化异常记录
+	jsonData.exception_record = hot.getDataAtCell(theIntance,9);
+
+	//具体注意事项中不能以 理化指标: 开头
+	while(hot.getDataAtCell(theIntance,0).indexOf("理化指标:")!=0){
+		attentionList.push(hot.getDataAtCell(theIntance,0));
+		theIntance++;
+	}
+	jsonData.attentionList = attentionList;
+
+	//拿理化指标
+	var str = hot.getDataAtCell(theIntance,1);
+	jsonData.physicochemical_target = str; 
+	theIntance++;
+
+	//拿最后一行
+	jsonData.engineer = hot.getDataAtCell(theIntance,2);
+	jsonData.material_weigher = hot.getDataAtCell(theIntance,4);
+	jsonData.material_checker = hot.getDataAtCell(theIntance,6);
+	jsonData.material_distributor = hot.getDataAtCell(theIntance,8);
+	jsonData.supervisor = hot.getDataAtCell(theIntance,10);
+
+	$.ajax({
+		url : "/FormulaSystem/api/formula?action=update",
+		type : "POST",
+		contentType : "application/json",
+		dataType : "json",
+		data : JSON.stringify(jsonData),
+		async : true,
+		success : function(result) {
+			if(result.code==200){
+				alert(result.data);
+			}else{
+				alert("导入失败，"+result.data[0]+"不存在数据库中！");
+			}
+		}
+	});
+
+}
+
+//最后一条是不能合并的
+//判断乳化工艺记录是不是最后一条
+//有两种情况,空和非空
+//非空的情况，判断该条是不是最后一条：
+function isLastOne(theInstance){
+	var indexOfTable = theInstance;
+	//分为两种情况，空和非空
+	if(isEmptyOrSpace(hot.getDataAtCell(indexOfTable,9))){
+		//空的时候 从本条数据开始判断
+		while(isEmptyOrSpace(hot.getDataAtCell(indexOfTable,9))){
+			indexOfTable++;
+		}
+		if(hot.getDataAtCell(indexOfTable,9)==="乳化异常记录:"){
+			return true;
+		}else{
+			return false;
+		}
+	}else{
+		//非空的时候 从下一条数据开始判断
+		indexOfTable++;
+		while(isEmptyOrSpace(hot.getDataAtCell(indexOfTable,9))){
+			indexOfTable++;
+		}
+		if(hot.getDataAtCell(indexOfTable,9)==="乳化异常记录:"){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+}
+
+function addCollection(result,data,collection){
+	//乳化工艺记录垂直合并
+	var procLength = result.data.procList.length;
+	//第一条不可以是空，否则会出bug
+	for(var x=5;x<procLength+5;x++){
+		//如果是最后一条，直接退出循环
+		var totalRow = 1;
+		if(isLastOneByArr(x,data)){
+			break;
+		}else{
+
+			while(data[x+totalRow][9]==0){	
+				totalRow++;
+			}
+			
+			if(totalRow>=2){
+				collection.push({row:x,col:9,rowspan:totalRow,colspan:5});
+				x = x + totalRow - 1;
+			}
+			
+		}	
+	}
+	
+	return collection;
+}
+
+//同上
+function isLastOneByArr(x,theArr){
+	var indexOfTable = x;
+	/* alert(theArr[indexOfTable][8]); */
+	if(isEmptyOrSpace(theArr[indexOfTable][9])){
+		//空行的情况，从当前行开始
+		while(isEmptyOrSpace(theArr[indexOfTable][9])){
+			indexOfTable++;
+		}
+		/* alert(theArr[indexOfTable][8]); */
+		if(theArr[indexOfTable][9]==="乳化异常记录:"){
+			return true;
+		}else{
+			return false;
+		}
+	}else{
+		//非空行的情况，从当前行开始
+		//如果是空就一直往下走
+		indexOfTable++;
+		while(isEmptyOrSpace(theArr[indexOfTable][9])){
+			indexOfTable++;
+		}	
+		/* alert(theArr[indexOfTable][8]); */
+		if(theArr[indexOfTable][9]==="乳化异常记录:"){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+}
+
+function isEmptyOrSpace(str){
+	if((typeof str)=="string"){
+		var len = str.length;
+		if(len==0){
+			return true;
+		}else{
+			for(var x=0;x<len;x++){
+				if(str.charAt(x)==" "){
+					continue;
+				}else{
+					return false;
+				}
+			}
+			return true;
+		}
+	}else{
+		/* alert(str+"不是字符串"); */
+		return false;
+	}
+}
+
+function test1(){
+	/* alert(hot.getDataAtCell(25,1)); */
+	hot.setDataAtCell(23,8,"123123",data);
+	alert("hot.getCellMeta(0,0):"+hot.getCellMeta(0,0));
+	alert("hot.getCell(0,0,false):"+hot.getCell(0,0,false));
+	
+}
+
+function computePlanAmount(){
+	var startIndex = 6;
+	var endIndex;
+	var indexTemp = startIndex;
+	//以原料名称为判断
+	while(!isEmptyOrSpace(hot.getDataAtCell(indexTemp,1)) && hot.getDataAtCell(indexTemp,0)!="计划量总量:"){
+		indexTemp++;
+	}
+	endIndex = indexTemp-1;
+	var sum = 0;
+	for(var x=startIndex;x<=endIndex;x++){
+		if(hot.getDataAtCell(x,4)==null){
+			return;
+		}
+
+		if(isEmptyOrSpace(hot.getDataAtCell(x,4))){
+			alert("计划量不可为空");
+			return; 
+		}
+	 
+		if(isNaN(hot.getDataAtCell(x,4))){
+			alert("计划量需为数字");
+			return;
+		}
+
+		if(isNegative(hot.getDataAtCell(x,4))){
+			alert("计划量不可为负数");
+			return;
+		}
+
+		sum += parseFloat(hot.getDataAtCell(x,4));
+		
+	}
+
+	var planAmountIndex = endIndex;
+	var str;
+	while((str=hot.getDataAtCell(planAmountIndex,0))!="计划量总量:"){
+		planAmountIndex++;
+	}
+
+	hot.setDataAtCell(planAmountIndex,1,sum,data);
+	
+	 
+}
+
+
+function computePrice(){
+	 //拿到原料区间 (有原料名称的才会被算作一行)
+	 var startIndex = 6;
+	 var endIndex;
+	 var indexTemp = startIndex;
+	 //以原料名称为判断
+	 while(!isEmptyOrSpace(hot.getDataAtCell(indexTemp,1)) && hot.getDataAtCell(indexTemp,0)!="计划量总量:"){
+		 indexTemp++;
+	 }
+	 endIndex = indexTemp-1;
+
+	 //获取计划量和计算成本
+	 var sum = 0;
+	 var add1,add2;
+	 for(var x=startIndex;x<=endIndex;x++){
+		 //直接在这里做判断
+
+		 //null值的判断,如果是null的话就先不要计算
+		 if(hot.getDataAtCell(x,4)==null || hot.getDataAtCell(x,8)==null){
+			 /* alert("计算出错,暂不计算"); */
+			 return;
+		 }
+		 
+		 if(isEmptyOrSpace(hot.getDataAtCell(x,4)) || isEmptyOrSpace(hot.getDataAtCell(x,8))){
+			 alert("数量和成本不可为空");
+			 return; 
+		 }
+	 
+		 if(isNaN(hot.getDataAtCell(x,4)) || isNaN(hot.getDataAtCell(x,8))){
+			 alert("数量和成本需为数字");
+			 return;
+		 }
+
+		 if(isNegative(hot.getDataAtCell(x,4)) || isNegative(hot.getDataAtCell(x,8))){
+			 alert("数量和成本不可为负数");
+			 return;
+		 }
+		 
+		 /* add1 = parseFloat(hot.getDataAtCell(x,4)); */
+		/*  alert(x+"  ："+hot.getDataAtCell(x,3)); */
+		 add2 = parseFloat(hot.getDataAtCell(x,8));
+		 sum += add2;
+	 }
+
+	 //将值赋给公式框
+	 //1.获取公式框,从最后一个原料往下找,比较节省时间
+	 //2.将值赋给他
+	 var priceIndex = endIndex;
+	 var str;
+	 while((str=hot.getDataAtCell(priceIndex,0))!="计划量总量:"){
+		 priceIndex++;
+	 }
+	 
+	 /* hot.setDataAtCell(); */
+	 hot.setDataAtCell(priceIndex,1,sum,data);
+	 /* alert("计算价格方法结束"); */
+
+}
+
+function isNegative(str){
+	//穿过来的参数是number类型，需要转换为字符串类型
+	/* console.log(typeof str.toString()); */
+	var strTemp = str.toString();
+	if(strTemp.charAt(0)=="-"){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+var jsCell;
+function setMethodForCells(){ 
+	alert("已经设置");
+	jsCell = hot.getCell(1,0,true);
+	jsCell.setAttribute("onblur","test01()");
+	
+} 
+
+function computePriceOfMaterial(rowNumber){
+	/* alert("计划量:"+hot.getDataAtCell(rowNumber,4)+"  价格:"+hot.getCellMeta(rowNumber,4).price); */
+	return hot.getDataAtCell(rowNumber,4)*hot.getCellMeta(rowNumber,4).price;
+}
+
+
+</script>
+</html>

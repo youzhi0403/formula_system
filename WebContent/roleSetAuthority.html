@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="css/mainz.css" />
+<link rel="stylesheet" type="text/css"
+	href="ztree_css/zTreeStyle/zTreeStyle.css" />
+<script type="text/javascript" src="ztree_js/jquery-1.4.4.min.js"></script>
+<script type="text/javascript" src="ztree_js/jquery.ztree.core.js"></script>
+<script type="text/javascript" src="ztree_js/jquery.ztree.excheck.js"></script>
+
+<script type="text/javascript" src="cwjJS/roleSetAuthorityJS.js"></script>
+</head>
+<style type="text/css">
+#treeDemo {
+	padding-left:85px;
+}
+</style>
+<body onload="getRoleId()">
+	<div style="text-align: center; font-size: 30px; margin-top: 10px">添加角色权限</div>
+	<div id="fid">
+		<form id="formid">
+			<table height="63" cellpadding="1" cellspacing="0"
+				style="width: 300px; margin: 0 auto">
+				<tr>
+					<td><div class="ztreeDiv">
+							<span id="saveId" style="display: none"></span>
+							<span class="title">选择权限：</span>
+							<div class="content_wrap">
+								<div class="zTreeDemoBackground left">
+									<ul id="treeDemo" class="ztree"></ul>
+								</div>
+
+							</div>
+						</div></td>
+				</tr>
+			</table>
+			<div class="foot">
+				<input type="button" value="保存" onclick="save()" /> <input
+					type="reset" value="重置" />
+			</div>
+		</form>
+	</div>
+</body>
+</html>

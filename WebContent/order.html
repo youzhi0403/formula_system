@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery.cookie.js"></script>
+<link rel="stylesheet" href="pagination/css/jquery.pagination.css" />
+<script type="text/javascript" src="pagination/js/jquery.padination.js"></script>
+<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+<script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="cwjJS/materialAddJS.js"></script>
+<link rel="stylesheet" type="text/css" href="css/main.css" />
+</head>
+<style type="text/css">
+</style>
+<body onload="setAuthorityAndName()">
+	<!--第一部分 -->
+	<div class="header">
+		<img src="image/logo.png" alt="配方系统" class="logo" /> <a
+			onclick="exit()"><img src="image/out.png" alt="退出" class="out" /></a>
+		<span class="name">欢迎<b id="userName"></b>登录
+		</span><img src="image/namemian.png" alt="用户"
+			style="float: right; margin-top: 10px;" />
+		<div>
+			<ul class="nav">
+            	<li class="menu"><a class="tag" href="#">首 页</a></li>
+				<li class="menu"><a class="tag" href="#">产 品</a></li>
+				<li class="menu"><a class="tag" href="#">配 方</a></li>
+				<li class="menu"><a class="tag" href="#">原 料</a></li>
+				<li class="menu"><a class="tag" href="#">供应商</a></li>
+                <li class="menu1"><a class="tag1" href="#">订单</a></li>
+                <li class="menu"><a class="tag" href="#">系统管理</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="gap"></div>
+	<!--第二部分 -->
+	<!--2-2-->
+	<div class="content1">
+		<div class="content-heander">原料订单</div>
+			<div class="search">
+				<span>：</span><input class="txt" type="text" id=""/>
+				<span>：</span><input class="txt" type="text" id=""/> 
+				<span>：</span><input class="txt" type="text" id=""/> 
+                <span>：</span><input class="txt" type="text" id=""/> 
+				<div class="search1" id="buttonDiv">
+                <input type="button" value="查找" class="push-button" onclick="searchByCondition()" />
+				</div>
+			</div>
+			<table id="tableId" class="lb" width="100%" height="51" border="1"
+				align="left" cellpadding="0" cellspacing="0">
+				<br />
+				<thead id="theadId">
+				</thead>
+				<tbody id="tbodyId">
+				</tbody>
+			</table>
+
+      
+			<div class="pagination">
+			<div id="pagination" style="float: right"></div>
+			<div style="float: left; display: none">
+				<p style="">
+					当前页数：<span id="page1"></span>
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<!--第三部分 -->
+	<div class="footer">配方工厂</div>
+</body>
+</html>

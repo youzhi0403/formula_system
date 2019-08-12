@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="stylesheet" type="text/css" href="css/mainz.css" />
+<script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="cwjJS/roleAddJS.js"></script>
+</head>
+
+<body onload="loadData()">
+	<div style="text-align: center; font-size: 30px"><span id="roleAddSpan"></span>角色</div>
+	<div id="fid">
+		<form id="formid">
+			<table height="63" cellpadding="1" cellspacing="0"
+				style="width: 300px; margin: 0 auto">
+				<tr style="display: none">
+					<td><span class="title">序号 : </span><input id="roleId"
+						type="text" disabled="disabled" /></td>
+				</tr>
+				<tr>
+				<td><span class="title">角色名称 : </span><input id="roleName"
+					type="text" /></td>
+				</tr>
+				<tr>
+					<td><span class="title">说明 : </span><input id="roleDesc"
+						type="text" /></td>
+				</tr>
+
+			</table>
+			
+			<div class="foot">
+				<input type="button" value="保存" onclick="save()" /> <input
+					type="reset" value="重置" />
+			</div>
+		</form>
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery.cookie.js"></script>
+<script type="text/javascript" src="cwjJS/suppplierJS.js"></script>
+<script type="text/javascript" src="cwjJS/jquery.ocupload-1.1.2.js"></script>
+<link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="pagination/css/jquery.pagination.css" />
+<script type="text/javascript" src="pagination/js/jquery.padination.js"></script>
+<script src="bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+<link rel="stylesheet" type="text/css" href="css/main.css" />
+<script type="text/javascript" src="cwjJS/supplierAddJS.js"></script>
+</head>
+
+<body onload="setAuthorityAndName()">
+<!--第一部分 -->
+<div class="header">
+    <img src="image/logo.png" alt="配方系统" class="logo"/>
+    <a onclick="exit()"><img src="image/out.png" alt="退出" class="out"/></a>
+    <span class="name">欢迎<b id="userName"></b>登录</span><img src="image/namemian.png" alt="用户" style="float:right;margin-top:10px;"/>
+    <div>
+    		<ul class="nav">
+            	<li class="menu" onclick = "welcomeLink()"><a class="tag" href="#">首 页</a></li>
+				<li class="menu" id="productPage" onclick = "productLink()"><a class="tag" href="#">产 品</a></li>
+				<li class="menu" id="formulaPage" onclick="formulaLink()"><a class="tag" href="#">配 方</a></li>
+				<li class="menu" id="materialPage" onclick="materialLink()"><a class="tag" href="#">原 料</a></li>
+				<li class="menu1" id="supplierPage" onclick="supplierLink()"><a class="tag1" href="#">供应商</a></li>
+				<!-- <li class="menu"><a class="tag" href="#">订单</a></li> -->
+                <li class="menu" id="systemPage" onclick="systemLink()"><a class="tag" href="#">系统管理</a></li>
+			</ul>
+     </div>
+</div>
+<div class="gap"></div>
+<!--第二部分 -->
+
+		<!--2-2-->
+		<div class="content1">
+			<div class="content-heander">供应商</div>
+			<div class="search">
+					<span>联系人：</span><input class="txt" type="text" id="contact" /> 
+					<span>公司名称：</span><input class="txt" type="text" id="companyName" /> 
+					<span>地址：</span><input class="txt" type="text" id="address" /> 
+					<span>电话：</span><input class="txt" type="text" id="telephone" />
+				<div class="search1" id="buttonDiv">
+                <input type="button" value="查找" class="push-button" onclick="searchByCondition()" />
+				</div>
+			</div>
+			<table id="tableId" class="lb" width="100%" height="30" border="1"
+				align="left" cellpadding="0" cellspacing="0">
+				<br />
+				<thead id="theadId">
+					
+				</thead>
+				<tbody id="tbodyId">
+				</tbody>
+			</table>
+
+			<div class="pagination">
+			<div id="pagination" style="float: right"></div>
+			<div
+				style="float: left;display:none;">
+				<p>
+					当前页数：<span id="page1"></span>
+				</p>
+			</div>
+		</div>
+		</div>
+	</div>
+
+	
+<!--第三部分 -->
+	<div class="footer">配方工厂</div>
+	<!-- <button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">
+	开始演示模态框
+	</button> -->
+	
+	<!-- 模态框（Modal） -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+						&times;
+					</button>
+					<h4 class="modal-title" id="myModalLabel">
+						供应商增加/修改
+					</h4>
+				</div>
+				<div class="modal-body">
+					<div id="fid">  
+						<form id="formid">  
+					    	<table height="63" cellpadding="1" cellspacing="0" style="width:300px; margin:0 auto">
+					     		<tr style="display:none">  
+					        	<td><span class="title">序号 : </span><input id="form_id" type="text" style="width:152px;" disabled="disabled"/></td>  
+					        	</tr>
+						      	<tr>  
+						      	<td><span class="title">联系人 : </span><input id="form_contact" type="text"/></td>  
+						      	</tr>
+							    <tr>  
+							    <td><span class="title">公司名称 : </span><input id="form_company" type="text"/></td>  
+							    </tr>
+							    <tr>
+							    <td><span class="title">地址 : </span><input id="form_address" type="text"/></td>  
+							    </tr>
+							    <tr>
+							    <td><span class="title">电话 : </span><input id="form_telephone" type="text"/></td>  
+							    </tr>   
+							 </table>  
+					    </form>  
+					</div>  
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">关闭
+					</button>
+					<button type="button" class="btn btn-primary" onclick="save()">
+						提交更改
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

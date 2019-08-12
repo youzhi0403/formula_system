@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c3p0-config>
+	 <default-config>
+				<property name="user">root</property>
+				<property name="password"></property>
+				<property name="driverClass">com.mysql.jdbc.Driver</property>
+				<property name="jdbcUrl">jdbc:mysql://localhost:3306/formula_system?useUnicode=true&amp;characterEncoding=UTF-8</property>
+				
+				<property name="initialPoolSize">20</property>
+				<property name="maxIdleTime">50</property>
+				<property name="maxPoolSize">30</property>
+				<property name="minPoolSize">10</property>
+		</default-config> 
+		
+		<!-- <default-config>
+				<property name="user">sa</property>
+				<property name="password">123123</property>
+				<property name="driverClass">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+				<property name="jdbcUrl">jdbc:sqlserver://192.168.9.212;databaseName=burden</property>
+				
+				<property name="initialPoolSize">30</property>
+				<property name="maxIdleTime">50</property>
+				<property name="maxPoolSize">50</property>
+				<property name="minPoolSize">10</property>
+		</default-config> -->
+
+</c3p0-config>
