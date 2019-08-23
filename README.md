@@ -10,9 +10,17 @@
 
 登录界面
 
+![Image text](https://github.com/youzhi0403/formula_system/blob/master/README_PICTURE/p1.png)
+
 系统界面
 
+![Image text](https://github.com/youzhi0403/formula_system/blob/master/README_PICTURE/p2.png)
+
 功能展示
+
+![Image text](https://github.com/youzhi0403/formula_system/blob/master/README_PICTURE/p3.png)
+
+![Image text](https://github.com/youzhi0403/formula_system/blob/master/README_PICTURE/p4.png)
 
 # 技术栈
 
