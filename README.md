@@ -36,9 +36,13 @@
 # 快速部署
 
 1.clone项目到本地。  
+
 2.数据库脚本在sql文件夹中，在mysql中执行脚本数据。 
+
 3.数据库配置在src文件夹下的c3p0-config.xml中。
+
 4.将项目放在eclipse中，并配置tomcat7（tocmat8会出问题）。
+
 5.eclipse中运行项目，访问 http://localhost:8080/FormulaSystem/  
 
 # 文档
